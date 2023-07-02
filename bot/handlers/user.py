@@ -5,7 +5,7 @@ from aiogram_dialog import DialogManager, StartMode
 
 from bot.services.locale import Locale
 from bot.services.database.models import User
-from bot.states.user import UserMain
+from bot.states.user import DialogSG
 
 router = Router()
 
@@ -18,6 +18,6 @@ async def cmd_start(
     locale: Locale,
 ):
     await dialog_manager.start(
-        UserMain.SOME_STATE,
+        DialogSG.SOME_STATE,
         mode=StartMode.RESET_STACK
     )

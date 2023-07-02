@@ -4,7 +4,7 @@ from aiogram_dialog.widgets.text import Const
 from aiogram_dialog import Dialog, DialogManager
 
 from bot.services.integration import LocaleText
-from bot.states.user import UserMain
+from bot.states.user import DialogSG
 
 
 async def get_data(dialog_manager: DialogManager, **kwargs):
@@ -19,7 +19,7 @@ async def get_data(dialog_manager: DialogManager, **kwargs):
 main_window = Window(
     LocaleText('welcome', user='@{user_name}'),
     Button(Const("Useless button"), id="nothing"),
-    state=UserMain.SOME_STATE,
+    state=DialogSG.SOME_STATE,
     getter=get_data
 )
 

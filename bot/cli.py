@@ -1,7 +1,9 @@
-import asyncio
+import asyncio, os
 import logging
 
 from pathlib import Path
+
+from sqlalchemy.engine import URL
 
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
@@ -27,7 +29,13 @@ from bot.services.locale import (
     Localizator,
     LocaleLoader
 )
-from bot.services.database import Database
+from bot.services.database import create_pool
+
+from dotenv import load_dotenv
+
+
+load_dotenv()
+
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
@@ -51,6 +59,7 @@ def _configure_fluent(locales_path):
 async def main():
     logger.warning("Starting bot")
 
+    # print all env variables
     config = BotConfig(
         _env_file=BOTFOLDER / Path(".env")
     )
@@ -58,15 +67,25 @@ async def main():
     storage = MemoryStorage()
 
     if config.redis_storage:
+        print("Using redis storage")
         from aiogram.fsm.storage.redis import RedisStorage, DefaultKeyBuilder
         storage = RedisStorage.from_url(
             "redis://localhost",
             key_builder=DefaultKeyBuilder(with_destiny=True)
         )
 
+
     bot = Bot(token=config.token)
     dp = Dispatcher(storage=storage)
-    database = Database(db_url=config.dsn, echo=config.echo)
+    dsn = URL(
+        drivername="mysql+aiomysql",
+        username=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        host=os.getenv("DB_HOST"),
+        port=os.getenv("DB_PORT"),
+        database=os.getenv("DB_NAME"),
+    )
+    database = await create_pool(db_url=dsn, echo=config.echo)
 
     # Router
     reg = DialogRegistry(dp)
