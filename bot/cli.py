@@ -6,6 +6,7 @@ from pathlib import Path
 from sqlalchemy.engine import URL
 
 from aiogram import Bot, Dispatcher
+
 from aiogram.fsm.storage.memory import MemoryStorage
 
 from aiogram_dialog import DialogRegistry
@@ -29,7 +30,7 @@ from bot.services.locale import (
     Localizator,
     LocaleLoader
 )
-from bot.services.database import create_pool
+from bot.services.database import create_pool, create_engine
 
 from dotenv import load_dotenv
 
@@ -67,7 +68,6 @@ async def main():
     storage = MemoryStorage()
 
     if config.redis_storage:
-        print("Using redis storage")
         from aiogram.fsm.storage.redis import RedisStorage, DefaultKeyBuilder
         storage = RedisStorage.from_url(
             "redis://localhost",
@@ -85,7 +85,9 @@ async def main():
         port=os.getenv("DB_PORT"),
         database=os.getenv("DB_NAME"),
     )
-    database = await create_pool(db_url=dsn, echo=config.echo)
+    
+    engine = await create_engine(db_url=dsn, echo=config.echo)
+    database = await create_pool(engine)
 
     # Router
     reg = DialogRegistry(dp)
@@ -121,9 +123,10 @@ async def main():
         await bot.delete_webhook(drop_pending_updates=True)
         await dp.start_polling(bot)
     finally:
-        await dp.storage.close()
+        await dp.fsm.storage.close()
         await bot.session.close()
-
+        await dp.storage.close()
+        await engine.dispose()
 
 def cli():
     """Wrapper for command line, app's entry point"""
@@ -131,6 +134,10 @@ def cli():
         asyncio.run(main())
     except (KeyboardInterrupt, SystemExit):
         logger.error("Bot stopped!")
+
+        # close all connections
+        # asyncio.get_event_loop().close()
+
 
 
 if __name__ == '__main__':

@@ -2,39 +2,25 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import registry, sessionmaker, Session
 from sqlalchemy.engine import make_url
 
+from sqlalchemy.ext.declarative import declarative_base
+
+
 
 
 mapper_registry = registry()
-Base = mapper_registry.generate_base()
+Base = declarative_base()
 
 
-async def create_pool(db_url, echo=True):
-    engine = create_async_engine(make_url(db_url), echo=echo, future=True)
+async def create_engine(db_url, echo=True):
+    engine = create_async_engine(make_url(db_url), echo=echo, pool_recycle=60 * 5, pool_pre_ping=True)
+    return engine
+
+
+async def create_pool(engine):
 
     _sessionmaker = sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False, autoflush=True)
     
     async with engine.begin() as conn:
-        print("Creating tables")
         await conn.run_sync(Base.metadata.create_all)
 
     return _sessionmaker
-
-class Database:
-    def __init__(self, db_url, echo=True):
-        _sessionmaker = Database._configure_sqla(db_url, echo=echo)
-        self._sessionmaker = _sessionmaker
-
-    def new_session(self) -> Session:
-        return self._sessionmaker()
-
-    @staticmethod
-    async def _configure_sqla(db_url, echo) -> sessionmaker:
-        engine = create_async_engine(make_url(db_url), echo=echo, future=True)
-
-        _sessionmaker = sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False, autoflush=True)
-        
-        async with engine.begin() as conn:
-            print("Creating tables")
-            await conn.run_sync(Base.metadata.create_all)
-
-        return _sessionmaker

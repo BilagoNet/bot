@@ -22,8 +22,8 @@ class RegisterMiddleware(BaseMiddleware):
             lang=event.from_user.language_code
         )
 
-        if not User.is_exists(session, _u):
-            User.create(session, _u)
+        if not await User.is_exists(session, _u):
+            await User.create(session, _u)
 
         data['db_user'] = _u
 

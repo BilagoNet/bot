@@ -10,7 +10,8 @@ from sqlalchemy.orm import sessionmaker
 
 class RepoMiddleware(BaseMiddleware):
     def __init__(self, db: sessionmaker) -> None:
-        self.db = db
+        self.db: sessionmaker = db
+        print("RepoMiddleware init")
 
     async def __call__(
         self,
@@ -18,17 +19,13 @@ class RepoMiddleware(BaseMiddleware):
         event: Update,
         data: Dict[str, Any],
     ) -> Any:
-
-        async with self.db() as session:
-            print("Creating session")
-            # get 1+1 with session
-            stmt = "SELECT 1 + 1"
-            result = await session.execute(stmt)
-            print(result.all())
-            data["session"] = session
-            try:
-                await handler(event, data)
-            except Exception as e:
-                traceback.print_exc()
-
-            await session.commit()
+        session = self.db()
+        print("Creating session")
+        # get 1+1 with session
+        data["session"] = session
+        try:
+            await handler(event, data)
+        except Exception as e:
+            traceback.print_exc(1)
+        # close session
+        await session.close()

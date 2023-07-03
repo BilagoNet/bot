@@ -1,7 +1,7 @@
 from sqlalchemy import (
     Column,
     BigInteger,
-    String,
+    Text
 )
 
 from sqlalchemy import select
@@ -14,19 +14,19 @@ class User(UserMixin, Base):
     __tablename__ = 'users'
 
     id = Column(BigInteger, primary_key=True)
-    name = Column(String, nullable=True)
-    nickname = Column(String, nullable=True)
-    lang = Column(String, nullable=False)
+    name = Column(Text, nullable=True)
+    nickname = Column(Text, nullable=True)
+    lang = Column(Text, nullable=False)
 
     @classmethod
-    def create(cls, s, user):
+    async def create(cls, s, user):
         s.add(user)
-        s.commit()
+        await s.commit()
 
     @classmethod
-    def is_exists(cls, s, user):
+    async def is_exists(cls, s, user):
         stmt = select(cls).where(cls.id == user.id)
-
-        result = s.execute(stmt).one_or_none()
+        result = await s.execute(stmt)
+        result = result.scalars().one_or_none()
 
         return bool(result)
