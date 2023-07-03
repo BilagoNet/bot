@@ -29,6 +29,7 @@ class Locale(FluentTranslator):
 class Localizator():
     """Pool of Locale objects."""
     def __init__(self, loader, locales_map: dict, default_locale='ru'):
+        print(locales_map)
         self.loader = loader
         self._map = locales_map
         self.default_locale = default_locale

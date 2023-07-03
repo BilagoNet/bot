@@ -1,5 +1,5 @@
-from aiogram import Router
-from aiogram.types import Message
+from aiogram import Router, F
+from aiogram.types import Message, CallbackQuery
 
 from aiogram_dialog import DialogManager, StartMode
 
@@ -9,10 +9,12 @@ from bot.states.user import DialogSG
 
 router = Router()
 
+# F contains lang_buttons
 
-@router.message(commands=['start'])
+@router.callback_query(~F.data.contains("lang_buttons"))
+@router.message(content_types=['any'])
 async def cmd_start(
-    message: Message,
+    message: Message | CallbackQuery,
     db_user: User,
     dialog_manager: DialogManager,
     locale: Locale,

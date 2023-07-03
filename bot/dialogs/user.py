@@ -5,16 +5,20 @@ from aiogram_dialog import Dialog, DialogManager
 
 from bot.services.integration import LocaleText
 from bot.states.user import DialogSG
+from .select_lang_window import select_language_window
 
 
 async def get_data(dialog_manager: DialogManager, **kwargs):
     mw_d = dialog_manager.data
 
     data = dict()
-    data['user_name'] = mw_d.get('db_user').nickname
+    data['user'] = mw_d.get('db_user')
+    # if lang selected lang true else false
+    data['lang'] = True if data['user'].lang else False
+    data['user_name'] = data['user'].id
 
     return data
-
+    
 
 main_window = Window(
     LocaleText('welcome', user='@{user_name}'),
@@ -23,4 +27,8 @@ main_window = Window(
     getter=get_data
 )
 
-dialog = Dialog(main_window)
+
+dialog = Dialog(
+    select_language_window,
+    main_window
+    )
